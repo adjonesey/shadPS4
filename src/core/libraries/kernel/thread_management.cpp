@@ -1014,7 +1014,7 @@ int PS4_SYSV_ABI scePthreadCreate(ScePthread* thread, const ScePthreadAttr* attr
         attr = g_pthread_cxt->GetDefaultAttr();
     }
 
-    *thread = pthread_pool->Create();
+    *thread = pthread_pool->Create(name);
 
     if ((*thread)->attr != nullptr) {
         scePthreadAttrDestroy(&(*thread)->attr);
