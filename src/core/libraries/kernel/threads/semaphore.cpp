@@ -15,9 +15,9 @@ namespace Libraries::Kernel {
 
 class Semaphore {
 public:
-    Semaphore(s32 init_count, s32 max_count, std::string_view name, bool is_fifo)
+    Semaphore(s32 init_count, s32 max_count, std::string_view name, bool is_fifo, bool is_deleted)
         : name{name}, token_count{init_count}, max_count{max_count}, init_count{init_count},
-          is_fifo{is_fifo} {}
+          is_fifo{is_fifo}, is_deleted{false} {}
     ~Semaphore() {
         ASSERT(wait_list.empty());
     }
@@ -161,6 +161,7 @@ public:
     s32 max_count;
     s32 init_count;
     bool is_fifo;
+    bool is_deleted;
 };
 
 using OrbisKernelSema = Semaphore*;
@@ -171,7 +172,7 @@ s32 PS4_SYSV_ABI sceKernelCreateSema(OrbisKernelSema* sem, const char* pName, u3
         LOG_ERROR(Lib_Kernel, "Semaphore creation parameters are invalid!");
         return ORBIS_KERNEL_ERROR_EINVAL;
     }
-    *sem = new Semaphore(initCount, maxCount, pName, attr == 1);
+    *sem = new Semaphore(initCount, maxCount, pName, attr == 1, false);
     return ORBIS_OK;
 }
 
@@ -207,9 +208,10 @@ int PS4_SYSV_ABI sceKernelCancelSema(OrbisKernelSema sem, s32 setCount, s32* pNu
 }
 
 int PS4_SYSV_ABI sceKernelDeleteSema(OrbisKernelSema sem) {
-    if (!sem) {
+    if (!sem || sem->is_deleted) {
         return SCE_KERNEL_ERROR_ESRCH;
     }
+    sem->is_deleted = true;
     delete sem;
     return ORBIS_OK;
 }
