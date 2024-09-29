@@ -1490,7 +1490,9 @@ int PS4_SYSV_ABI scePthreadOnce(int* once_control, void (*init_routine)(void)) {
 }
 
 [[noreturn]] void PS4_SYSV_ABI scePthreadExit(void* value_ptr) {
-    g_pthread_self->is_free = true;
+    if (g_pthread_self->attr->policy == SCHED_FIFO) {
+        g_pthread_self->is_free = true;
+    }
 
     pthread_exit(value_ptr);
     UNREACHABLE();
